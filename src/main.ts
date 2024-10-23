@@ -15,27 +15,49 @@ canvasElement.height = 256;
 canvasElement.id = "canvas";
 app.appendChild(canvasElement);
 
+
 const ctx = canvasElement.getContext("2d");
+
+
+let linesList: {x: number, y: number}[][] = [];
+let currentLine: {x: number, y: number}[] = [];
 
 let isDrawing = false;
 
 canvasElement.addEventListener("mousedown", () => {
     isDrawing = true;
+    currentLine = [];
+    linesList.push(currentLine);   
 })
 
 canvasElement.addEventListener("mouseup", () => {
     isDrawing = false;
-    ctx?.beginPath();
+    canvasElement.dispatchEvent(new Event("drawing-changed"));
 })
 
 canvasElement.addEventListener("mousemove", (pos)=> {
     if (isDrawing){
-        ctx?.lineTo(pos.offsetX, pos.offsetY);
-        ctx?.stroke();
-        ctx?.beginPath();
-        ctx?.moveTo(pos.offsetX,pos.offsetY);
+        const position = {x: pos.offsetX, y: pos.offsetY};
+        currentLine.push(position);
+        canvasElement.dispatchEvent(new Event("drawing-changed"));
     }
 })
+
+canvasElement.addEventListener("drawing-changed", () => {
+    if (ctx){
+        ctx.clearRect(0,0,canvasElement.width, canvasElement.height);
+        ctx.beginPath();
+        for (const line of linesList) {
+            if (line.length > 0) {
+                ctx.moveTo(line[0].x, line[0].y);
+                for (const position of line) {
+                ctx.lineTo(position.x, position.y);
+                }
+            }
+        }
+        ctx.stroke();
+    }
+});
 
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
@@ -43,4 +65,6 @@ app.appendChild(clearButton);
 
 clearButton.addEventListener("click", () => {
     ctx?.clearRect(0,0, canvasElement.width, canvasElement.height)
+    linesList = [];
+    canvasElement.dispatchEvent(new Event("drawing-changed"));
 });
