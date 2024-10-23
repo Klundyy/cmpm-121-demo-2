@@ -20,6 +20,7 @@ const ctx = canvasElement.getContext("2d");
 
 
 let linesList: {x: number, y: number}[][] = [];
+let redoList: {x: number, y: number}[][] = [];
 let currentLine: {x: number, y: number}[] = [];
 
 let isDrawing = false;
@@ -27,6 +28,7 @@ let isDrawing = false;
 canvasElement.addEventListener("mousedown", () => {
     isDrawing = true;
     currentLine = [];
+    redoList = [];
     linesList.push(currentLine);   
 })
 
@@ -62,6 +64,32 @@ canvasElement.addEventListener("drawing-changed", () => {
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 app.appendChild(clearButton);
+
+const undoButton = document.createElement("button");
+undoButton.innerHTML = "Undo";
+app.appendChild(undoButton);
+undoButton.addEventListener("click", () => {
+    if(linesList.length > 0){
+        const line = linesList.pop();
+        if(line){
+            redoList.push(line);
+        }
+        canvasElement.dispatchEvent(new Event("drawing-changed"));
+    }
+})
+
+const redoButton = document.createElement("button");
+redoButton.innerHTML = "Redo";
+app.appendChild(redoButton);
+redoButton.addEventListener("click", () => {
+    if(redoList.length > 0){
+        const line = redoList.pop();
+        if(line){
+            linesList.push(line);
+        }
+        canvasElement.dispatchEvent(new Event("drawing-changed"));
+    }
+})
 
 clearButton.addEventListener("click", () => {
     ctx?.clearRect(0,0, canvasElement.width, canvasElement.height)
