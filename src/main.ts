@@ -13,6 +13,7 @@ const canvasElement = document.createElement("canvas");
 canvasElement.width = 256;
 canvasElement.height = 256;
 canvasElement.id = "canvas";
+canvasElement.style.cursor = "none";
 app.appendChild(canvasElement);
 
 const ctx = canvasElement.getContext("2d");
@@ -41,12 +42,37 @@ class markerCommand {
     }
 }
 
+class mouseDisplay {
+    private x: number;
+    private y: number;
+    private width: number;
+    constructor(x: number, y: number, width: number){
+        this.x = x;
+        this.y = y;
+        this.width = width
+    }
+    updatePos(x: number, y: number){
+        this.x = x;
+        this.y = y;
+    }
+    updateSize(width: number){
+        this.width = width;
+    }
+    draw(ctx: CanvasRenderingContext2D){
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.width/2,0,2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+    }
+}
+
 // Line Initialization
 
 let linesList: markerCommand[] = [];
 let redoList: markerCommand[] = [];
 let currentLine: markerCommand | null = null;
-let currentWidth = 1;
+let currentWidth = 2;
+let mousePreview: mouseDisplay | null = null;
 
 let isDrawing = false;
 
@@ -54,6 +80,7 @@ canvasElement.addEventListener("mousedown", (e) => {
     isDrawing = true;
     currentLine = new markerCommand(e.offsetX, e.offsetY, currentWidth);
     redoList = [];
+    mousePreview = null;
     linesList.push(currentLine);   
 })
 
@@ -64,10 +91,19 @@ canvasElement.addEventListener("mouseup", () => {
 })
 
 canvasElement.addEventListener("mousemove", (pos)=> {
-    if (!isDrawing || !currentLine) return;
     const position = {x: pos.offsetX, y: pos.offsetY};
-    currentLine.drag(position.x, position.y);
-    canvasElement.dispatchEvent(new Event("drawing-changed"));
+    if (!isDrawing && ctx){
+        if(!mousePreview){
+            mousePreview = new mouseDisplay(position.x, position.y, currentWidth);
+        } else{
+            mousePreview.updatePos(position.x,position.y);
+            mousePreview.updateSize(currentWidth);
+        }
+        canvasElement.dispatchEvent(new Event("tool-moved"));
+    } else if (isDrawing && currentLine){
+        currentLine.drag(position.x, position.y);
+        canvasElement.dispatchEvent(new Event("drawing-changed"));
+    }
 })
 
 canvasElement.addEventListener("drawing-changed", () => {
@@ -79,12 +115,23 @@ canvasElement.addEventListener("drawing-changed", () => {
     }
 });
 
+canvasElement.addEventListener("tool-moved", () => {
+    if(ctx && mousePreview){
+        ctx.clearRect(0,0,canvasElement.width, canvasElement.height);
+        for (const line of linesList) {
+            line.display(ctx);
+        }
+        mousePreview.draw(ctx);
+    }
+});
+
 // Buttons
 
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 app.appendChild(clearButton);
 clearButton.addEventListener("click", () => {
+    isDrawing = false;
     ctx?.clearRect(0,0, canvasElement.width, canvasElement.height)
     linesList = [];
     canvasElement.dispatchEvent(new Event("drawing-changed"));
@@ -94,6 +141,7 @@ const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
 app.appendChild(undoButton);
 undoButton.addEventListener("click", () => {
+    isDrawing = false;
     if(linesList.length > 0){
         const line = linesList.pop();
         if(line){
@@ -107,6 +155,7 @@ const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo";
 app.appendChild(redoButton);
 redoButton.addEventListener("click", () => {
+    isDrawing = false;
     if(redoList.length > 0){
         const line = redoList.pop();
         if(line){
@@ -121,7 +170,8 @@ thinButton.innerHTML = "Thin";
 thinButton.classList.add("selectedTool");
 app.appendChild(thinButton);
 thinButton.addEventListener("click", () => {
-    currentWidth = 1;
+    currentWidth = 2;
+    isDrawing = false;
     thinButton.classList.add("selectedTool");
     thickButton.classList.remove("selectedTool");
 })
@@ -130,7 +180,8 @@ const thickButton = document.createElement("button");
 thickButton.innerHTML = "Thick";
 app.appendChild(thickButton);
 thickButton.addEventListener("click", () => {
-    currentWidth = 3;
+    currentWidth = 5;
+    isDrawing = false;
     thickButton.classList.add("selectedTool");
     thinButton.classList.remove("selectedTool");
 })
