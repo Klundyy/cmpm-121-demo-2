@@ -55,9 +55,6 @@ class mouseDisplay {
         this.x = x;
         this.y = y;
     }
-    updateSize(width: number){
-        this.width = width;
-    }
     draw(ctx: CanvasRenderingContext2D){
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.width/2,0,2 * Math.PI);
@@ -66,42 +63,99 @@ class mouseDisplay {
     }
 }
 
+class stickerDisplay {
+    private x: number;
+    private y: number;
+    private sticker: string;
+    constructor(x: number, y: number, sticker: string){
+        this.x = x;
+        this.y = y;
+        this.sticker = sticker
+    }
+    updatePos(x: number, y: number){
+        this.x = x;
+        this.y = y;
+    }
+    draw(ctx: CanvasRenderingContext2D){
+        ctx.font = "20px Arial";
+        ctx.fillText(this.sticker, this.x, this.y);
+    }
+}
+class Sticker{
+    private x: number;
+    private y: number;
+    private sticker: string;
+    constructor(x: number, y: number, sticker: string){
+        this.x = x;
+        this.y = y;
+        this.sticker = sticker
+    }
+    drag(x: number, y: number){
+        this.x = x;
+        this.y = y;
+    }
+    display(ctx: CanvasRenderingContext2D){
+        ctx.font = "20px Arial";
+        ctx.fillText(this.sticker, this.x, this.y);
+    }
+}
+
 // Line Initialization
 
-let linesList: markerCommand[] = [];
-let redoList: markerCommand[] = [];
+let linesList: (markerCommand|Sticker)[] = [];
+let redoList: (markerCommand|Sticker)[] = [];
 let currentLine: markerCommand | null = null;
+let currentSticker: Sticker | null = null;
 let currentWidth = 2;
-let mousePreview: mouseDisplay | null = null;
+let currentStickerItem: string | null = null;
+let mousePreview: mouseDisplay | stickerDisplay | null = null;
 
 let isDrawing = false;
 
 canvasElement.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    currentLine = new markerCommand(e.offsetX, e.offsetY, currentWidth);
-    redoList = [];
-    mousePreview = null;
-    linesList.push(currentLine);   
+    if(!currentStickerItem){
+        isDrawing = true;
+        currentLine = new markerCommand(e.offsetX, e.offsetY, currentWidth);
+        redoList = [];
+        mousePreview = null;
+        linesList.push(currentLine);
+    } else{
+        currentSticker = new Sticker(e.offsetX, e.offsetY, currentStickerItem);
+        linesList.push(currentSticker);
+        redoList = [];
+        mousePreview = null;
+    }
 })
 
 canvasElement.addEventListener("mouseup", () => {
     isDrawing = false;
     currentLine = null;
+    currentSticker = null;
     canvasElement.dispatchEvent(new Event("drawing-changed"));
 })
 
 canvasElement.addEventListener("mousemove", (pos)=> {
     const position = {x: pos.offsetX, y: pos.offsetY};
     if (!isDrawing && ctx){
-        if(!mousePreview){
-            mousePreview = new mouseDisplay(position.x, position.y, currentWidth);
+        if(currentStickerItem){
+            if(!mousePreview){
+                mousePreview = new stickerDisplay(position.x, position.y, currentStickerItem);
+            } else{
+                mousePreview.updatePos(position.x,position.y);
+            }
         } else{
-            mousePreview.updatePos(position.x,position.y);
-            mousePreview.updateSize(currentWidth);
+            if(!mousePreview){
+                mousePreview = new mouseDisplay(position.x, position.y, currentWidth);
+            } else{
+                mousePreview.updatePos(position.x,position.y);
+            }
         }
         canvasElement.dispatchEvent(new Event("tool-moved"));
     } else if (isDrawing && currentLine){
         currentLine.drag(position.x, position.y);
+        canvasElement.dispatchEvent(new Event("drawing-changed"));
+    } else if (currentSticker){
+        currentSticker.drag(position.x, position.y);
         canvasElement.dispatchEvent(new Event("drawing-changed"));
     }
 })
@@ -171,9 +225,14 @@ thinButton.classList.add("selectedTool");
 app.appendChild(thinButton);
 thinButton.addEventListener("click", () => {
     currentWidth = 2;
+    currentStickerItem = null;
     isDrawing = false;
     thinButton.classList.add("selectedTool");
     thickButton.classList.remove("selectedTool");
+    stickerButton1.classList.remove("selectedTool");
+    stickerButton2.classList.remove("selectedTool");
+    stickerButton3.classList.remove("selectedTool");
+    canvasElement.dispatchEvent(new Event("tool-moved"));
 })
 
 const thickButton = document.createElement("button");
@@ -181,7 +240,52 @@ thickButton.innerHTML = "Thick";
 app.appendChild(thickButton);
 thickButton.addEventListener("click", () => {
     currentWidth = 5;
+    currentStickerItem = null;
     isDrawing = false;
     thickButton.classList.add("selectedTool");
     thinButton.classList.remove("selectedTool");
+    stickerButton1.classList.remove("selectedTool");
+    stickerButton2.classList.remove("selectedTool");
+    stickerButton3.classList.remove("selectedTool");
+    canvasElement.dispatchEvent(new Event("tool-moved"));
+})
+
+const stickerButton1 = document.createElement("button");
+stickerButton1.innerHTML = "🧩";
+app.appendChild(stickerButton1);
+stickerButton1.addEventListener("click", () => {
+    isDrawing = false;
+    currentStickerItem = "🧩"
+    stickerButton1.classList.add("selectedTool");
+    thinButton.classList.remove("selectedTool");
+    thickButton.classList.remove("selectedTool");
+    stickerButton2.classList.remove("selectedTool");
+    stickerButton3.classList.remove("selectedTool");
+    canvasElement.dispatchEvent(new Event("tool-moved"));
+})
+const stickerButton2 = document.createElement("button");
+stickerButton2.innerHTML = "🍉";
+app.appendChild(stickerButton2);
+stickerButton2.addEventListener("click", () => {
+    isDrawing = false;
+    currentStickerItem = "🍉"
+    stickerButton2.classList.add("selectedTool");
+    thinButton.classList.remove("selectedTool");
+    thickButton.classList.remove("selectedTool");
+    stickerButton1.classList.remove("selectedTool");
+    stickerButton3.classList.remove("selectedTool");
+    canvasElement.dispatchEvent(new Event("tool-moved"));
+})
+const stickerButton3 = document.createElement("button");
+stickerButton3.innerHTML = "🐲";
+app.appendChild(stickerButton3);
+stickerButton3.addEventListener("click", () => {
+    isDrawing = false;
+    currentStickerItem = "🐲"
+    stickerButton3.classList.add("selectedTool");
+    thinButton.classList.remove("selectedTool");
+    thickButton.classList.remove("selectedTool");
+    stickerButton1.classList.remove("selectedTool");
+    stickerButton2.classList.remove("selectedTool");
+    canvasElement.dispatchEvent(new Event("tool-moved"));
 })
