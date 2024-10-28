@@ -295,3 +295,27 @@ customStickerButton.addEventListener("click", () => {
 
     canvasElement.dispatchEvent(new Event("tool-moved"));
 })
+
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+app.appendChild(exportButton);
+exportButton.addEventListener("click", () => {
+    const canvasExport = document.createElement("canvas");
+    
+    canvasExport.width = 1024;
+    canvasExport.height = 1024;
+
+    const ctxExport = canvasExport.getContext("2d");
+    if(ctxExport){
+        ctxExport.scale(4,4);
+        ctxExport.fillStyle = "white";
+        ctxExport.fillRect(0,0,canvasExport.width,canvasExport.height);
+        for (const line of linesList) {
+            line.display(ctxExport);
+        }
+        const anchor = document.createElement("a");
+        anchor.href = canvasExport.toDataURL("image/png");
+        anchor.download = "sketchpad.png";
+        anchor.click();
+    }
+})
