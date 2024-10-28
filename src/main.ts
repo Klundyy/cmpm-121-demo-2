@@ -110,7 +110,30 @@ let currentWidth = 2;
 let currentStickerItem: string | null = null;
 let mousePreview: mouseDisplay | stickerDisplay | null = null;
 
+const stickers = ["🧩","🍉","🐲"];
+const stickerButtons: HTMLButtonElement[] = []
+
 let isDrawing = false;
+
+function createStickersButton(sticker: string){
+    const button = document.createElement("button");
+    button.innerHTML = sticker;
+    app.appendChild(button);
+    button.addEventListener("click", () => {
+        isDrawing = false;
+        currentStickerItem = sticker;
+        button.classList.add("selectedTool");
+        thinButton.classList.remove("selectedTool");
+        thickButton.classList.remove("selectedTool");
+        stickerButtons.forEach((otherButton) => {
+            if(otherButton != button){
+                otherButton.classList.remove("selectedTool");
+            }
+        })
+        canvasElement.dispatchEvent(new Event("tool-moved"));
+    })
+    return button;  
+}
 
 canvasElement.addEventListener("mousedown", (e) => {
     if(!currentStickerItem){
@@ -229,9 +252,9 @@ thinButton.addEventListener("click", () => {
     isDrawing = false;
     thinButton.classList.add("selectedTool");
     thickButton.classList.remove("selectedTool");
-    stickerButton1.classList.remove("selectedTool");
-    stickerButton2.classList.remove("selectedTool");
-    stickerButton3.classList.remove("selectedTool");
+    stickerButtons.forEach((button) => {
+        button.classList.remove("selectedTool")
+    });
     canvasElement.dispatchEvent(new Event("tool-moved"));
 })
 
@@ -244,48 +267,31 @@ thickButton.addEventListener("click", () => {
     isDrawing = false;
     thickButton.classList.add("selectedTool");
     thinButton.classList.remove("selectedTool");
-    stickerButton1.classList.remove("selectedTool");
-    stickerButton2.classList.remove("selectedTool");
-    stickerButton3.classList.remove("selectedTool");
+    stickerButtons.forEach((button) => {
+        button.classList.remove("selectedTool")
+    });
     canvasElement.dispatchEvent(new Event("tool-moved"));
 })
 
-const stickerButton1 = document.createElement("button");
-stickerButton1.innerHTML = "🧩";
-app.appendChild(stickerButton1);
-stickerButton1.addEventListener("click", () => {
-    isDrawing = false;
-    currentStickerItem = "🧩"
-    stickerButton1.classList.add("selectedTool");
-    thinButton.classList.remove("selectedTool");
-    thickButton.classList.remove("selectedTool");
-    stickerButton2.classList.remove("selectedTool");
-    stickerButton3.classList.remove("selectedTool");
-    canvasElement.dispatchEvent(new Event("tool-moved"));
+stickers.forEach((sticker) => {
+    const button = createStickersButton(sticker);
+    stickerButtons.push(button);
+    app.appendChild(button);
 })
-const stickerButton2 = document.createElement("button");
-stickerButton2.innerHTML = "🍉";
-app.appendChild(stickerButton2);
-stickerButton2.addEventListener("click", () => {
+
+const customStickerButton = document.createElement("button");
+customStickerButton.innerHTML = "Custom Sticker";
+app.appendChild(customStickerButton);
+customStickerButton.addEventListener("click", () => {
     isDrawing = false;
-    currentStickerItem = "🍉"
-    stickerButton2.classList.add("selectedTool");
-    thinButton.classList.remove("selectedTool");
-    thickButton.classList.remove("selectedTool");
-    stickerButton1.classList.remove("selectedTool");
-    stickerButton3.classList.remove("selectedTool");
-    canvasElement.dispatchEvent(new Event("tool-moved"));
-})
-const stickerButton3 = document.createElement("button");
-stickerButton3.innerHTML = "🐲";
-app.appendChild(stickerButton3);
-stickerButton3.addEventListener("click", () => {
-    isDrawing = false;
-    currentStickerItem = "🐲"
-    stickerButton3.classList.add("selectedTool");
-    thinButton.classList.remove("selectedTool");
-    thickButton.classList.remove("selectedTool");
-    stickerButton1.classList.remove("selectedTool");
-    stickerButton2.classList.remove("selectedTool");
+    const customSticker = prompt("Custom Sticker", "🙂");
+    if(customSticker){
+        stickers.push(customSticker);
+        currentStickerItem = customSticker
+        const button = createStickersButton(customSticker);
+        stickerButtons.push(button);
+        app.appendChild(button);
+    }
+
     canvasElement.dispatchEvent(new Event("tool-moved"));
 })
