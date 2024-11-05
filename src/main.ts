@@ -57,7 +57,7 @@ class mouseDisplay {
     }
     draw(ctx: CanvasRenderingContext2D){
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.width/2,0,2 * Math.PI);
+        ctx.arc(this.x, this.y, this.width/2.5,0,2 * Math.PI);
         ctx.fill();
         ctx.stroke();
     }
@@ -77,7 +77,7 @@ class stickerDisplay {
         this.y = y;
     }
     draw(ctx: CanvasRenderingContext2D){
-        ctx.font = "20px Arial";
+        ctx.font = "22px Arial";
         ctx.fillText(this.sticker, this.x, this.y);
     }
 }
@@ -95,18 +95,20 @@ class Sticker{
         this.y = y;
     }
     display(ctx: CanvasRenderingContext2D){
-        ctx.font = "20px Arial";
+        ctx.font = "22px Arial";
         ctx.fillText(this.sticker, this.x, this.y);
     }
 }
 
 // Line Initialization
 
+const thinWidth = 2;
+const thickWidth = 7;
 let linesList: (markerCommand|Sticker)[] = [];
 let redoList: (markerCommand|Sticker)[] = [];
 let currentLine: markerCommand | null = null;
 let currentSticker: Sticker | null = null;
-let currentWidth = 2;
+let currentWidth = thinWidth;
 let currentStickerItem: string | null = null;
 let mousePreview: mouseDisplay | stickerDisplay | null = null;
 
@@ -247,7 +249,7 @@ thinButton.innerHTML = "Thin";
 thinButton.classList.add("selectedTool");
 app.appendChild(thinButton);
 thinButton.addEventListener("click", () => {
-    currentWidth = 2;
+    currentWidth = thinWidth;
     currentStickerItem = null;
     isDrawing = false;
     thinButton.classList.add("selectedTool");
@@ -262,7 +264,7 @@ const thickButton = document.createElement("button");
 thickButton.innerHTML = "Thick";
 app.appendChild(thickButton);
 thickButton.addEventListener("click", () => {
-    currentWidth = 5;
+    currentWidth = thickWidth;
     currentStickerItem = null;
     isDrawing = false;
     thickButton.classList.add("selectedTool");
