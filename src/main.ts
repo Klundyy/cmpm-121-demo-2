@@ -18,7 +18,8 @@ app.appendChild(canvasElement);
 
 const ctx = canvasElement.getContext("2d");
 
-class markerCommand {
+// Class representing a marker command
+class MarkerCommand {
     private points: {x: number, y : number}[] = [];
     private lineWidth: number;
     constructor(initX : number, initY : number, lineWidth: number){
@@ -38,11 +39,11 @@ class markerCommand {
             }
             ctx.stroke();
         }
-
     }
 }
 
-class mouseDisplay {
+// Class representing the mouse display
+class MouseDisplay {
     private x: number;
     private y: number;
     private width: number;
@@ -63,7 +64,8 @@ class mouseDisplay {
     }
 }
 
-class stickerDisplay {
+// Class representing the sticker display
+class StickerDisplay {
     private x: number;
     private y: number;
     private sticker: string;
@@ -81,7 +83,9 @@ class stickerDisplay {
         ctx.fillText(this.sticker, this.x, this.y);
     }
 }
-class Sticker{
+
+// Class representing a sticker
+class Sticker {
     private x: number;
     private y: number;
     private sticker: string;
@@ -104,19 +108,20 @@ class Sticker{
 
 const thinWidth = 2;
 const thickWidth = 7;
-let linesList: (markerCommand|Sticker)[] = [];
-let redoList: (markerCommand|Sticker)[] = [];
-let currentLine: markerCommand | null = null;
+let linesList: (MarkerCommand|Sticker)[] = [];
+let redoList: (MarkerCommand|Sticker)[] = [];
+let currentLine: MarkerCommand | null = null;
 let currentSticker: Sticker | null = null;
 let currentWidth = thinWidth;
 let currentStickerItem: string | null = null;
-let mousePreview: mouseDisplay | stickerDisplay | null = null;
+let mousePreview: MouseDisplay | StickerDisplay | null = null;
 
 const stickers = ["🧩","🍉","🐲"];
 const stickerButtons: HTMLButtonElement[] = []
 
 let isDrawing = false;
 
+// Function to create sticker buttons
 function createStickersButton(sticker: string){
     const button = document.createElement("button");
     button.innerHTML = sticker;
@@ -140,7 +145,7 @@ function createStickersButton(sticker: string){
 canvasElement.addEventListener("mousedown", (e) => {
     if(!currentStickerItem){
         isDrawing = true;
-        currentLine = new markerCommand(e.offsetX, e.offsetY, currentWidth);
+        currentLine = new MarkerCommand(e.offsetX, e.offsetY, currentWidth);
         redoList = [];
         mousePreview = null;
         linesList.push(currentLine);
@@ -164,13 +169,13 @@ canvasElement.addEventListener("mousemove", (pos)=> {
     if (!isDrawing && ctx){
         if(currentStickerItem){
             if(!mousePreview){
-                mousePreview = new stickerDisplay(position.x, position.y, currentStickerItem);
+                mousePreview = new StickerDisplay(position.x, position.y, currentStickerItem);
             } else{
                 mousePreview.updatePos(position.x,position.y);
             }
         } else{
             if(!mousePreview){
-                mousePreview = new mouseDisplay(position.x, position.y, currentWidth);
+                mousePreview = new MouseDisplay(position.x, position.y, currentWidth);
             } else{
                 mousePreview.updatePos(position.x,position.y);
             }
